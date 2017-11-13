@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.xiaoleilu</groupId>
 		<artifactId>hutool-parent</artifactId>
-		<version>3.1.2</version>
+		<version>3.2.0</version>
 	</parent>
 
 	<artifactId>hutool-core</artifactId>
@@ -15,12 +15,6 @@
 	<description>Hutool核心</description>
 	
 	<dependencies>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<scope>provided</scope>
-			<optional>true</optional>
-		</dependency>
 	</dependencies>
 
 </project>

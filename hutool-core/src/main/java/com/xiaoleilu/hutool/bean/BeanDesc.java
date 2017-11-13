@@ -55,6 +55,8 @@ public class BeanDesc {
 	
 	/**
 	 * 获取字段名-字段属性Map
+	 * 
+	 * @param ignoreCase 是否忽略大小写，true为忽略，false不忽略
 	 * @return 字段名-字段属性Map
 	 */
 	public Map<String, PropDesc> getPropMap(boolean ignoreCase) {
@@ -116,12 +118,25 @@ public class BeanDesc {
 		final Field[] fields = ReflectUtil.getFields(this.beanClass);
 		
 		String fieldName;
+		Class<?> fieldType;
 		Method getter;
 		Method setter;
 		for (Field field : fields) {
 			fieldName = field.getName();
-			getter = ReflectUtil.getMethod(this.beanClass, StrUtil.genGetter(fieldName));
-			setter = ReflectUtil.getMethod(this.beanClass, StrUtil.genSetter(fieldName), field.getType());
+			fieldType = field.getType();
+			if(fieldType == Boolean.class || fieldType == boolean.class) {
+				//Boolean和boolean类型特殊处理
+				fieldName = StrUtil.removePrefix(fieldName, "is");
+				getter = ReflectUtil.getMethodIgnoreCase(this.beanClass, StrUtil.upperFirstAndAddPre(fieldName, "is"));
+				if(null == getter) {
+					getter = ReflectUtil.getMethodIgnoreCase(this.beanClass, StrUtil.genGetter(fieldName));
+				}
+				
+			}else {
+				getter = ReflectUtil.getMethodIgnoreCase(this.beanClass, StrUtil.genGetter(fieldName));
+			}
+			
+			setter = ReflectUtil.getMethodIgnoreCase(this.beanClass, StrUtil.genSetter(fieldName), field.getType());
 			this.propMap.put(fieldName, new PropDesc(field, getter, setter));
 		}
 		return this;
@@ -207,6 +222,8 @@ public class BeanDesc {
 
 		/**
 		 * 获取Setter方法
+		 * 
+		 * @return {@link Method}Setter 方法对象
 		 */
 		public Method getSetter() {
 			return this.setter;

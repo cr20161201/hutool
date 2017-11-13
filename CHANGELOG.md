@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.2.0
+
+### 新特性
+* MailUtil邮件工具类支持附件
+* Convert增加int、long、short与bytes之间的转换
+* BeetlUtil增加更多简化方法
+* extra模块中模板相关工具类移入template包中
+* ScriptUtil增加eval方法，执行脚本快捷方法
+* 增加Excel03SaxReader用于03格式的Excel通过Sax方式读取
+* HttpUtil增加超时重载，post方法支持Rest模式
+* core包中去除servlet-api可选依赖，extra模块中增加ServletUtil（core包中的部分方法移入此工具类）
+* MailUtil支持SSL方式连接
+* 增加MapProxy，用于代理Map对象，提供各种getXXX方法（感谢@【珠海】hzhhui）
+* Convert增加toXXXArray方法
+* 增加剪贴板工具类ClipboardUtil（感谢@【北京】宁静）
+* ObjectUtil增加toString方法（感谢@【南京】toling）
+* XmlUtil增加readObjectFromXml重载（感谢@【北京】酱油君）
+* FileUtil和IoUtil去除final修饰（issue#49@Github）
+* 为了更好的兼容性，Getter和Setter方法获取忽略大小写
+* StrUtil增加split和splitTrim重载方法（感谢@【南京】toling @【北京】宁静）
+* 增加FileUtil.writeLines重载方法和writeUtf8Lines方法（感谢@【北京】宁静）
+
+### Bug修复
+* 修复FileUtil.normalize导致的路径修复问题
+* db模块中字段使用别名时去掉包装符
+* CollUtil.filter方法对于不可变集合参数报错问题改进（issue#IFW3Y@Gitee）
+* 修复Convert.convert方法目标为数组对象时导致的问题
+* 修复poi模块中ExcelReader读取带小数的标准单元格时小数部分丢失问题修复
+* 修复SecureUtil.rsa和SecureUtil.dsa方法中publicKey传入问题（感谢@【上海】毛毛虎）
+* 修复Cache模块传入Integer.MAX_VALUE错误问题（感谢@【南京】雲栖鬆）
+* 修复BeanDesc无法识别isXXX方法的问题
+
 ## 3.1.2
 
 ### 新特性

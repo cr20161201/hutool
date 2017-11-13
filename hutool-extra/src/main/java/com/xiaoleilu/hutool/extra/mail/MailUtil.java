@@ -1,23 +1,12 @@
 package com.xiaoleilu.hutool.extra.mail;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
-import com.xiaoleilu.hutool.log.Log;
-import com.xiaoleilu.hutool.log.LogFactory;
+import com.xiaoleilu.hutool.collection.CollUtil;
+import com.xiaoleilu.hutool.lang.Assert;
+import com.xiaoleilu.hutool.util.StrUtil;
 
 /**
  * 邮件工具类，基于javax.mail封装
@@ -26,36 +15,100 @@ import com.xiaoleilu.hutool.log.LogFactory;
  * @since 3.1.2
  */
 public class MailUtil {
-	private static Log log = LogFactory.get();
+	
+	/**
+	 * 使用配置文件中设置的账户发送文本邮件，发送给单个或多个收件人<br>
+	 * 多个收件人可以使用逗号“,”分隔，也可以通过分号“;”分隔
+	 * 
+	 * @param to 收件人
+	 * @param subject 标题
+	 * @param content 正文
+	 * @param files 附件列表
+	 * @since 3.2.0
+	 */
+	public static void sendText(String to, String subject, String content, File... files) {
+		send(to, subject, content, false, files);
+	}
+	
+	/**
+	 * 使用配置文件中设置的账户发送HTML邮件，发送给单个或多个收件人<br>
+	 * 多个收件人可以使用逗号“,”分隔，也可以通过分号“;”分隔
+	 * 
+	 * @param to 收件人
+	 * @param subject 标题
+	 * @param content 正文
+	 * @param files 附件列表
+	 * @since 3.2.0
+	 */
+	public static void sendHtml(String to, String subject, String content, File... files) {
+		send(to, subject, content, true, files);
+	}
 
 	/**
-	 * 发送邮件给单收件人
+	 * 使用配置文件中设置的账户发送邮件，发送单个或多个收件人<br>
+	 * 多个收件人可以使用逗号“,”分隔，也可以通过分号“;”分隔
 	 * 
 	 * @param to 收件人
 	 * @param subject 标题
 	 * @param content 正文
 	 * @param isHtml 是否为HTML
+	 * @param files 附件列表
 	 */
-	public static void send(String to, String subject, String content, boolean isHtml) {
-		List<String> list = new ArrayList<String>();
-		list.add(to);
-		send(list, subject, content, isHtml);
+	public static void send(String to, String subject, String content, boolean isHtml, File... files) {
+		send(splitTos(to), subject, content, isHtml, files);
+	}
+	
+	/**
+	 * 使用配置文件中设置的账户发送文本邮件，发送给多人
+	 * 
+	 * @param tos 收件人列表
+	 * @param subject 标题
+	 * @param content 正文
+	 * @param files 附件列表
+	 */
+	public static void sendText(Collection<String> tos, String subject, String content, File... files) {
+		send(tos, subject, content, false, files);
+	}
+	
+	/**
+	 * 使用配置文件中设置的账户发送HTML邮件，发送给多人
+	 * 
+	 * @param tos 收件人列表
+	 * @param subject 标题
+	 * @param content 正文
+	 * @param files 附件列表
+	 * @since 3.2.0
+	 */
+	public static void sendHtml(Collection<String> tos, String subject, String content, File... files) {
+		send(tos, subject, content, true, files);
 	}
 
 	/**
-	 * 使用默认的设置账户发送邮件
+	 * 使用配置文件中设置的账户发送邮件，发送给多人
 	 * 
 	 * @param tos 收件人列表
 	 * @param subject 标题
 	 * @param content 正文
 	 * @param isHtml 是否为HTML
+	 * @param files 附件列表
 	 */
-	public static void send(Collection<String> tos, String subject, String content, boolean isHtml) {
-		try {
-			send(GlobalMailAccount.INSTANCE.getAccount(), tos, subject, content, isHtml);
-		} catch (MessagingException e) {
-			log.error("Send mail error!", e);
-		}
+	public static void send(Collection<String> tos, String subject, String content, boolean isHtml, File... files) {
+		send(GlobalMailAccount.INSTANCE.getAccount(), tos, subject, content, isHtml, files);
+	}
+	
+	/**
+	 * 发送邮件给多人
+	 * 
+	 * @param mailAccount 邮件认证对象
+	 * @param to 收件人，多个收件人逗号或者分号隔开
+	 * @param subject 标题
+	 * @param content 正文
+	 * @param isHtml 是否为HTML格式
+	 * @param files 附件列表
+	 * @since 3.2.0
+	 */
+	public static void send(MailAccount mailAccount, String to, String subject, String content, boolean isHtml, File... files) {
+		send(mailAccount, splitTos(to), subject, content, isHtml, files);
 	}
 
 	/**
@@ -66,42 +119,37 @@ public class MailUtil {
 	 * @param subject 标题
 	 * @param content 正文
 	 * @param isHtml 是否为HTML格式
-	 * @throws MessagingException
+	 * @param files 附件列表
 	 */
-	public static void send(MailAccount mailAccount, Collection<String> tos, String subject, String content, boolean isHtml) throws MessagingException {
-		// 认证登录
-		final Session session = createSession(mailAccount);
-
-		final Message msg = new MimeMessage(session);
-		msg.setFrom(new InternetAddress(mailAccount.getFrom()));
-		msg.setSubject(subject);
-		msg.setSentDate(new Date());
-
-		if (isHtml) {
-			final BodyPart html = new MimeBodyPart();
-			html.setContent(content, "text/html; charset=utf-8");
-			
-			final Multipart mainPart = new MimeMultipart();
-			mainPart.addBodyPart(html);
-		} else {
-			msg.setText(content);
-		}
-
-		for (String to : tos) {
-			msg.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(to));
-			Transport.send(msg);
-			log.debug("Send mail to {} successed.", to);
-		}
+	public static void send(MailAccount mailAccount, Collection<String> tos, String subject, String content, boolean isHtml, File... files) {
+		Mail.create(mailAccount)//
+				.to(tos.toArray(new String[tos.size()]))//
+				.setTitle(subject)//
+				.setContent(content)//
+				.setHtml(isHtml)//
+				.setFiles(files)//
+				.send();
 	}
-
+	
+	//------------------------------------------------------------------------------------------------------------------------ Private method start
 	/**
-	 * 创建邮件会话
+	 * 将多个联系人转为列表，分隔符为逗号或者分号
 	 * 
-	 * @param mailAccount 邮件帐号信息
-	 * @return 邮件会话 {@link Session}
+	 * @param to 多个联系人
+	 * @return 联系人列表
 	 */
-	public static Session createSession(final MailAccount mailAccount) {
-		return Session.getDefaultInstance(mailAccount.getSmtpProps(), //
-				mailAccount.isAuth() ? new UserPassAuthenticator(mailAccount.getUser(), mailAccount.getPass()) : null);
+	private static List<String> splitTos(String to){
+		Assert.notBlank(to);
+		
+		List<String> tos;
+		if(StrUtil.contains(to, ',')) {
+			tos = StrUtil.splitTrim(to, ',');
+		}else if(StrUtil.contains(to, ';')) {
+			tos = StrUtil.splitTrim(to, ';');
+		}else {
+			tos = CollUtil.newArrayList(to);
+		}
+		return tos;
 	}
+	//------------------------------------------------------------------------------------------------------------------------ Private method end
 }

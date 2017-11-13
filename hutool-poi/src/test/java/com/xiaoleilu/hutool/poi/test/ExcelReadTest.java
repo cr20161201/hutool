@@ -5,8 +5,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.xiaoleilu.hutool.io.resource.ClassPathResource;
-import com.xiaoleilu.hutool.lang.Console;
+import com.xiaoleilu.hutool.io.resource.ResourceUtil;
 import com.xiaoleilu.hutool.poi.excel.ExcelReader;
 import com.xiaoleilu.hutool.poi.excel.ExcelUtil;
 
@@ -19,27 +18,26 @@ public class ExcelReadTest {
 	
 	@Test
 	public void excelReadTest() {
-		ExcelReader reader = ExcelUtil.getReader(new ClassPathResource("aaa.xlsx").getStream());
+		ExcelReader reader = ExcelUtil.getReader(ResourceUtil.getStream("aaa.xlsx"));
 		List<List<Object>> readAll = reader.read();
 		
 		//标题
 		Assert.assertEquals("姓名", readAll.get(0).get(0));
 		Assert.assertEquals("性别", readAll.get(0).get(1));
 		Assert.assertEquals("年龄", readAll.get(0).get(2));
+		Assert.assertEquals("鞋码", readAll.get(0).get(3));
 		
 		//第一行
 		Assert.assertEquals("张三", readAll.get(1).get(0));
 		Assert.assertEquals("男", readAll.get(1).get(1));
 		Assert.assertEquals(11L, readAll.get(1).get(2));
+		Assert.assertEquals(41.5D, readAll.get(1).get(3));
 	}
 	
 	@Test
 	public void excelReadToMapListTest() {
-		ExcelReader reader = ExcelUtil.getReader(new ClassPathResource("aaa.xlsx").getStream());
+		ExcelReader reader = ExcelUtil.getReader(ResourceUtil.getStream("aaa.xlsx"));
 		List<Map<String,Object>> readAll = reader.readAll();
-		for (Map<String, Object> map : readAll) {
-			Console.log(map);
-		}
 		
 		Assert.assertEquals("张三", readAll.get(0).get("姓名"));
 		Assert.assertEquals("男", readAll.get(0).get("性别"));
@@ -48,7 +46,7 @@ public class ExcelReadTest {
 	
 	@Test
 	public void excelReadToBeanListTest() {
-		ExcelReader reader = ExcelUtil.getReader(new ClassPathResource("aaa.xlsx").getStream());
+		ExcelReader reader = ExcelUtil.getReader(ResourceUtil.getStream("aaa.xlsx"));
 		reader.addHeaderAlias("姓名", "name");
 		reader.addHeaderAlias("年龄", "age");
 		reader.addHeaderAlias("性别", "gender");
